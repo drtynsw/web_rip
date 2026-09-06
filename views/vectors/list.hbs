@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main>
+    {{> header }}
+    <section class="content">
+      <h1>Услуги: векторы атак</h1>
+
+      <form action="/vectors" method="POST" class="search-form">
+        <input type="text" name="query" placeholder="Поиск по названию или категории" value="{{data.query}}">
+        <button type="submit">Найти</button>
+      </form>
+
+      <div class="card-grid">
+        {{#each data.vectors}}
+          <div class="card">
+            <img src="{{this.image}}" alt="{{this.title}}" class="card-icon">
+            <h2><a href="/vectors/{{this.id}}">{{this.title}}</a></h2>
+            <p class="badge">{{this.category}}</p>
+            <p>{{this.description}}</p>
+            <p><strong>Базовая опасность:</strong> {{this.baseSeverity}} / 10</p>
+          </div>
+        {{else}}
+          <p>Ничего не найдено.</p>
+        {{/each}}
+      </div>
+    </section>
+    {{> footer }}
+  </main>
+</body>
+</html>
