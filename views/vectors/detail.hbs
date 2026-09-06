@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main>
+    {{> header }}
+    <section class="content">
+      {{#if data.vector}}
+        <a href="/vectors" class="back-link">&larr; К списку векторов атак</a>
+        <img src="{{data.vector.image}}" alt="{{data.vector.title}}" class="detail-icon">
+        <h1>{{data.vector.title}}</h1>
+        <p class="badge">{{data.vector.category}}</p>
+        <p>{{data.vector.description}}</p>
+        <p><strong>Базовая степень опасности:</strong> {{data.vector.baseSeverity}} / 10</p>
+      {{else}}
+        <p>Вектор атаки не найден.</p>
+        <a href="/vectors" class="back-link">&larr; К списку векторов атак</a>
+      {{/if}}
+    </section>
+    {{> footer }}
+  </main>
+</body>
+</html>
