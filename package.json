@@ -1,13 +1,13 @@
 {
   "name": "bmstu_lab",
   "version": "0.0.1",
-  "description": "Лаб. работа №1",
+  "description": "Лаб. работа №1 — Оценка уязвимости системы (NestJS + Handlebars)",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "upload:images": "ts-node scripts/upload-images.ts"
+    "upload:media": "ts-node scripts/upload-media.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.0.0",
