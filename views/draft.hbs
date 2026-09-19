@@ -13,54 +13,47 @@
         <h1>Добавление услуги (черновик)</h1>
 
         {{#if data.vector}}
-          <div class="draft-media-row">
-            <div class="draft-media-box">
-              <span class="draft-media-label">Изображение</span>
-              <img src="/media/{{data.vector.imageKey}}" alt="{{data.vector.title}}">
-            </div>
-            <div class="draft-media-box">
+          <div class="draft-media-col">
+            <div class="draft-media-item">
               <span class="draft-media-label">Видео</span>
-              <video src="/media/{{data.vector.videoKey}}" muted loop></video>
+              <video src="/media/{{data.vector.videoKey}}" class="draft-media-preview" muted loop></video>
+              <input type="file" accept="video/*" class="draft-media-input">
+            </div>
+
+            <div class="draft-media-item">
+              <span class="draft-media-label">Изображение</span>
+              <img src="/media/{{data.vector.imageKey}}" alt="{{data.vector.title}}" class="draft-media-preview">
+              <input type="file" accept="image/*" class="draft-media-input">
             </div>
           </div>
 
           <div class="field-group">
             <label for="title">Название</label>
-            <input id="title" type="text" value="{{data.vector.title}}" >
+            <input id="title" type="text" value="{{data.vector.title}}">
           </div>
 
           <div class="field-group">
             <label for="category">Категория</label>
-            <input id="category" type="text" value="{{data.vector.category}}" >
+            <input id="category" type="text" value="{{data.vector.category}}">
           </div>
 
           <div class="field-group">
             <label for="description">Описание</label>
-            <textarea id="description" >{{data.vector.description}}</textarea>
+            <textarea id="description">{{data.vector.description}}</textarea>
           </div>
 
           <div class="field-group">
             <label for="severity">Базовая опасность (1–10)</label>
-            <input id="severity" type="number" value="{{data.vector.severity}}" >
+            <input id="severity" type="number" value="{{data.vector.severity}}">
           </div>
 
           <div class="field-group">
             <label for="year">Год первой массовой фиксации</label>
-            <input id="year" type="number" value="{{data.vector.discoveredYear}}" >
-          </div>
-
-          <div class="field-group">
-            <label for="imageFile">Файл изображения</label>
-            <input id="imageFile" type="file" accept="image/*">
-          </div>
-
-          <div class="field-group">
-            <label for="videoFile">Файл видео</label>
-            <input id="videoFile" type="file" accept="video/*">
+            <input id="year" type="number" value="{{data.vector.discoveredYear}}">
           </div>
 
           <p class="draft-note">
-            Это черновик.
+            Это черновик
           </p>
         {{else}}
           <p class="draft-note">Черновиков пока нет.</p>

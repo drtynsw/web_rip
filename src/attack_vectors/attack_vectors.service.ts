@@ -17,7 +17,7 @@ export interface AttackVector {
 
 @Injectable()
 export class VectorsService {
-  private vectors: AttackVector[] = [
+  private Vectors: AttackVector[] = [
     {
       id: 1,
       title: 'DDoS-атака',
@@ -110,24 +110,24 @@ export class VectorsService {
     },
   ];
 
-  findPublished(minSeverity?: number): AttackVector[] {
-    let result = this.vectors.filter((v) => v.status === 'published');
-    if (minSeverity !== undefined && !Number.isNaN(minSeverity)) {
-      result = result.filter((v) => v.severity >= minSeverity);
+  findPublished(discoveredYear?: number): AttackVector[] {
+    let result = this.Vectors.filter((v) => v.status === 'published');
+    if (discoveredYear !== undefined && !Number.isNaN(discoveredYear)) {
+      result = result.filter((v) => v.discoveredYear === discoveredYear);
     }
     return result;
   }
 
   findDraft(): AttackVector | undefined {
-    return this.vectors.find((v) => v.status === 'draft');
+    return this.Vectors.find((v) => v.status === 'draft');
   }
 
   findById(id: number): AttackVector | undefined {
-    return this.vectors.find((v) => v.id === id);
+    return this.Vectors.find((v) => v.id === id);
   }
 
   findNextPublished(afterId: number): AttackVector | undefined {
-    const published = this.vectors.filter((v) => v.status === 'published');
+    const published = this.Vectors.filter((v) => v.status === 'published');
     const idx = published.findIndex((v) => v.id === afterId);
     if (idx === -1 || published.length === 0) return published[0];
     return published[(idx + 1) % published.length];

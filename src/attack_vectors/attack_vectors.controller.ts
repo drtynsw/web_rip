@@ -1,30 +1,29 @@
 import { Controller, Get, Param, Query, Render } from '@nestjs/common';
-import { VectorsService } from './vectors.service';
-
+import { VectorsService } from './attack_vectors.service';
 @Controller()
 export class VectorsController {
-  constructor(private readonly vectorsService: VectorsService) {}
+  constructor(private readonly VectorsService: VectorsService) {}
 
   @Get()
   @Render('tiles')
-  getTiles(@Query('minSeverity') minSeverityRaw?: string) {
-    const minSeverity =
-      minSeverityRaw !== undefined && minSeverityRaw !== ''
-        ? Number(minSeverityRaw)
+  getTiles(@Query('discoveredDate') discoveredDateRaw?: string) {
+    const discoveredYear =
+      discoveredDateRaw && discoveredDateRaw.length >= 4
+        ? Number(discoveredDateRaw.slice(0, 4))
         : undefined;
 
-    const vectors = this.vectorsService
-      .findPublished(minSeverity)
+    const vectors = this.VectorsService
+      .findPublished(discoveredYear)
       .map((v) => ({
         ...v,
-        likesCount: this.vectorsService.likesCount(v),
+        likesCount: this.VectorsService.likesCount(v),
       }));
 
     return {
       title: 'Векторы атак',
       data: {
         vectors,
-        minSeverity: minSeverityRaw ?? '',
+        discoveredDate: discoveredDateRaw ?? '',
         isTiles: true,
       },
     };
@@ -33,7 +32,7 @@ export class VectorsController {
   @Get('draft')
   @Render('draft')
   getDraft() {
-    const vector = this.vectorsService.findDraft();
+    const vector = this.VectorsService.findDraft();
     return {
       title: 'Добавление',
       data: { vector, isDraft: true },
@@ -47,14 +46,16 @@ export class VectorsController {
 
     let vector;
     if (id === undefined) {
-      vector = this.vectorsService.findPublished()[0];
+      vector = this.VectorsService.findPublished()[0];
     } else if (next === 'true') {
-      vector = this.vectorsService.findNextPublished(id);
+      vector = this.VectorsService.findNextPublished(id);
     } else {
-      vector = this.vectorsService.findById(id);
+      vector = this.VectorsService.findById(id);
     }
 
-    const likesCount = vector ? this.vectorsService.likesCount(vector) : 0;
+    const likesCount = vector
+      ? this.VectorsService.likesCount(vector)
+      : 0;
 
     return {
       title: vector ? vector.title : 'Не найдено',
