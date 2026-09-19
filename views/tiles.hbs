@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="phone">
+    <div class="page-content">
+      <div class="tiles-page">
+        <h1>Векторы атак</h1>
+
+        <form class="filter-form" action="/" method="GET">
+          <input
+            type="date"
+            name="discoveredDate"
+            value="{{data.discoveredDate}}"
+          >
+          <button type="submit">Найти</button>
+        </form>
+
+        <div class="tile-grid">
+          {{#each data.vectors}}
+            <a class="tile-card" href="/feed/{{this.id}}">
+              <div class="tile-image-wrap">
+                <img src="/media/{{this.imageKey}}" alt="{{this.title}}">
+              </div>
+              <div class="tile-info">
+                <p class="tile-title">{{this.title}}</p>
+                <div class="tile-likes"><span class="heart">♥</span> {{this.likesCount}}</div>
+              </div>
+            </a>
+          {{else}}
+            <p class="tiles-empty">Ничего не найдено на выбранный год.</p>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+
+    {{> tabbar isTiles=data.isTiles }}
+  </div>
+</body>
+</html>
