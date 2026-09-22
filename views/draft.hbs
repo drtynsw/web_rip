@@ -10,54 +10,70 @@
   <div class="phone">
     <div class="page-content">
       <div class="draft-page">
-        <h1>Добавление услуги (черновик)</h1>
+        <h1>Добавление услуги</h1>
 
-        {{#if data.vector}}
+        {{#unless data.hasDraft}}
+          <form action="/draft" method="POST">
+            <div class="draft-media-col">
+              <div class="draft-media-item">
+                <span class="draft-media-label">Видео</span>
+                <input type="file" accept="video/*" class="draft-media-input" name="video">
+              </div>
+              <div class="draft-media-item">
+                <span class="draft-media-label">Изображение</span>
+                <input type="file" accept="image/*" class="draft-media-input" name="image">
+              </div>
+            </div>
+
+            <div class="field-group">
+              <label for="title">Название</label>
+              <input id="title" name="title" type="text" required>
+            </div>
+
+            <p class="draft-note">
+              Это черновик.
+            </p>
+
+            <button type="submit" class="btn-primary">Далее</button>
+          </form>
+        {{else}}
           <div class="draft-media-col">
             <div class="draft-media-item">
               <span class="draft-media-label">Видео</span>
-              <video src="/media/{{data.vector.videoKey}}" class="draft-media-preview" muted loop></video>
-              <input type="file" accept="video/*" class="draft-media-input">
+              <video src="/media/{{data.vector.videoUrl}}" class="draft-media-preview" muted loop></video>
             </div>
-
             <div class="draft-media-item">
               <span class="draft-media-label">Изображение</span>
-              <img src="/media/{{data.vector.imageKey}}" alt="{{data.vector.title}}" class="draft-media-preview">
-              <input type="file" accept="image/*" class="draft-media-input">
+              <img src="/media/{{data.vector.imageUrl}}" alt="{{data.vector.title}}" class="draft-media-preview">
             </div>
           </div>
 
           <div class="field-group">
-            <label for="title">Название</label>
-            <input id="title" type="text" value="{{data.vector.title}}">
+            <label>Название</label>
+            <input type="text" value="{{data.vector.title}}" readonly>
           </div>
 
-          <div class="field-group">
-            <label for="category">Категория</label>
-            <input id="category" type="text" value="{{data.vector.category}}">
-          </div>
+          <form action="/draft/publish" method="POST">
+            <input type="hidden" name="id" value="{{data.vector.id}}">
 
-          <div class="field-group">
-            <label for="description">Описание</label>
-            <textarea id="description">{{data.vector.description}}</textarea>
-          </div>
+            <div class="field-group">
+              <label for="shortDescription">Краткое описание</label>
+              <textarea id="shortDescription" name="shortDescription" required>{{data.vector.shortDescription}}</textarea>
+            </div>
 
-          <div class="field-group">
-            <label for="severity">Базовая опасность (1–10)</label>
-            <input id="severity" type="number" value="{{data.vector.severity}}">
-          </div>
+            <div class="field-group">
+              <label for="severity">Базовая опасность (1–10)</label>
+              <input id="severity" name="severity" type="number" min="1" max="10" required>
+            </div>
 
-          <div class="field-group">
-            <label for="year">Год первой массовой фиксации</label>
-            <input id="year" type="number" value="{{data.vector.discoveredYear}}">
-          </div>
+            <div class="field-group">
+              <label for="discoveredYear">Год первой массовой фиксации</label>
+              <input id="discoveredYear" name="discoveredYear" type="number" required>
+            </div>
 
-          <p class="draft-note">
-            Это черновик
-          </p>
-        {{else}}
-          <p class="draft-note">Черновиков пока нет.</p>
-        {{/if}}
+            <button type="submit" class="btn-primary">Опубликовать</button>
+          </form>
+        {{/unless}}
       </div>
     </div>
 

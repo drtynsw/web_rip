@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
-import { VectorsController } from './attack_vectors.controller';
-import { VectorsService } from './attack_vectors.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { AttackVectorsController } from './attack_vectors.controller';
+import { AttackVectorsService } from './attack_vectors.service';
+import { AttackVector } from './entities/attack-vector.entity';
+import { Like } from './entities/like.entity';
+import { User } from './entities/user.entity';
 
 @Module({
-  controllers: [VectorsController],
-  providers: [VectorsService],
-  exports: [VectorsService],
+  imports: [TypeOrmModule.forFeature([AttackVector, Like, User])],
+  controllers: [AttackVectorsController],
+  providers: [AttackVectorsService],
+  exports: [AttackVectorsService],
 })
-export class VectorsModule {}
+export class AttackVectorsModule {}
