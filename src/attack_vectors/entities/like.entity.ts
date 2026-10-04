@@ -1,14 +1,16 @@
 import {
   Column,
+  Unique,
   Entity,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../../users/entities/user.entity';
 import { AttackVector } from './attack-vector.entity';
 
 @Entity('likes')
+@Unique(['userId', 'attackVectorId'])
 export class Like {
   @PrimaryGeneratedColumn()
   id: number;

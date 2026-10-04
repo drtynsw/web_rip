@@ -7,57 +7,42 @@ export class MinioService implements OnModuleInit {
   private readonly logger = new Logger(MinioService.name);
   private readonly client: Minio.Client;
   private readonly bucket: string;
+  private readonly publicUrl: string;
 
   constructor(private readonly config: ConfigService) {
-    this.bucket = this.config.get<string>(
-      'MINIO_BUCKET',
-      'vulnerability-images',
-    );
+    this.bucket = this.config.get<string>('MINIO_BUCKET', 'attack-vectors');
+    const endPoint = this.config.get<string>('MINIO_ENDPOINT', 'localhost');
+    const port = Number(this.config.get<string>('MINIO_PORT', '9000'));
+    const useSSL = this.config.get<string>('MINIO_USE_SSL', 'false') === 'true';
 
     this.client = new Minio.Client({
-      endPoint: this.config.get<string>('MINIO_ENDPOINT', 'localhost'),
-      port: Number(this.config.get<string>('MINIO_PORT', '9000')),
-      useSSL: this.config.get<string>('MINIO_USE_SSL', 'false') === 'true',
+      endPoint, port, useSSL,
       accessKey: this.config.get<string>('MINIO_ACCESS_KEY', 'minioadmin'),
       secretKey: this.config.get<string>('MINIO_SECRET_KEY', 'minioadmin'),
     });
+    this.publicUrl = `${useSSL ? 'https' : 'http'}://${endPoint}:${port}/${this.bucket}`;
   }
 
   async onModuleInit() {
     try {
-      const exists = await this.client.bucketExists(this.bucket);
-      if (!exists) {
+      if (!(await this.client.bucketExists(this.bucket))) {
         await this.client.makeBucket(this.bucket);
-        this.logger.log(`Бакет "${this.bucket}" создан`);
-      } else {
-        this.logger.log(`Подключение к MinIO установлено, бакет "${this.bucket}" найден`);
       }
+      await this.client.setBucketPolicy(this.bucket, JSON.stringify({
+        Version: '2012-10-17',
+        Statement: [{ Effect: 'Allow', Principal: { AWS: ['*'] }, Action: ['s3:GetObject'],
+          Resource: [`arn:aws:s3:::${this.bucket}/*`] }],
+      }));
     } catch (err) {
-      this.logger.warn(
-        `Не удалось подключиться к MinIO: ${err.message}. ` +
-          `Проверьте, что контейнер MinIO запущен и переменные окружения верны.`,
-      );
+      this.logger.warn(`MinIO недоступен: ${err.message}`);
     }
   }
 
-  getObjectStream(objectName: string) {
-    return this.client.getObject(this.bucket, objectName);
+  async upload(objectName: string, data: Buffer, contentType: string): Promise<void> {
+    await this.client.putObject(this.bucket, objectName, data, data.length, { 'Content-Type': contentType });
   }
 
-  statObject(objectName: string) {
-    return this.client.statObject(this.bucket, objectName);
-  }
-
-  uploadFile(objectName: string, filePath: string, contentType?: string) {
-    return this.client.fPutObject(
-      this.bucket,
-      objectName,
-      filePath,
-      contentType ? { 'Content-Type': contentType } : undefined,
-    );
-  }
-
-  getPresignedUrl(objectName: string, expirySeconds = 3600) {
-    return this.client.presignedGetObject(this.bucket, objectName, expirySeconds);
+  getUrl(objectName: string): string {
+    return `${this.publicUrl}/${objectName}`;
   }
 }

@@ -3,7 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AttackVectorsModule } from './attack_vectors/attack_vectors.module';
 import { MinioModule } from './minio/minio.module';
-import { MediaModule } from './media/media.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -23,8 +23,8 @@ import { MediaModule } from './media/media.module';
       }),
     }),
     MinioModule,
-    MediaModule,
     AttackVectorsModule,
+    UsersModule,
   ],
 })
 export class AppModule {}

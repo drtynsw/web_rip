@@ -6,7 +6,7 @@ import {
   ManyToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { User } from './user.entity';
+import { User } from '../../users/entities/user.entity';
 
 export enum AttackVectorStatus {
   DRAFT = 'draft',
@@ -50,7 +50,7 @@ export class AttackVector {
   @Column({ name: 'published_at', type: 'timestamp', nullable: true })
   publishedAt: Date | null;
 
-  @ManyToOne(() => User, { onDelete: 'RESTRICT' }) // каскадное удаление запрещено по заданию
+  @ManyToOne(() => User, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'creator_id' })
   creator: User;
 

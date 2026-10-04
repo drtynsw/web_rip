@@ -1,133 +1,86 @@
 import {
-  Body,
-  Controller,
-  Get,
-  Param,
-  Post,
-  Query,
-  Redirect,
-  Render,
-  Res,
+  BadRequestException, Body, Controller, Delete, Get, HttpCode, Param, ParseIntPipe, Post, Put, Query,
+  UploadedFiles, UseInterceptors,
 } from '@nestjs/common';
-import type { Response } from 'express';
-import {
-  AttackVectorsService,
-  DEFAULT_IMAGE_KEY,
-  DEFAULT_VIDEO_KEY,
-} from './attack_vectors.service';
-import { getCurrentUserId } from './current-user';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { AttackVectorsService } from './attack_vectors.service';
+import { getCurrentUser } from '../common/current-user';
+import { UploadedFile } from '../common/uploaded-file';
 
-@Controller()
+const toInt = (v: unknown): number | undefined => {
+  if (v === undefined || v === null || v === '') return undefined;
+  const n = Number(v);
+  return Number.isInteger(n) ? n : NaN;
+};
+
+@Controller('attack_vectors')
 export class AttackVectorsController {
-  constructor(private readonly attackVectorsService: AttackVectorsService) {}
+  constructor(private readonly service: AttackVectorsService) {}
 
   @Get()
-  @Render('tiles')
-  async getTiles(@Query('discoveredDate') discoveredDateRaw?: string) {
-    const discoveredYear =
-      discoveredDateRaw && discoveredDateRaw.length >= 4
-        ? Number(discoveredDateRaw.slice(0, 4))
-        : undefined;
-
-    const published = await this.attackVectorsService.findPublished(discoveredYear);
-    const vectors = await Promise.all(
-      published.map(async (v) => ({
-        ...v,
-        likesCount: await this.attackVectorsService.likesCount(v.id),
-      })),
-    );
-
-    return {
-      title: 'Векторы атак',
-      data: {
-        vectors,
-        discoveredDate: discoveredDateRaw ?? '',
-        isTiles: true,
-      },
-    };
+  list(@Query('discovered_year') yearRaw?: string) {
+    const year = toInt(yearRaw);
+    if (Number.isNaN(year)) throw new BadRequestException();
+    return this.service.findPublished(getCurrentUser().id, year);
   }
 
-  @Get(['feed', 'feed/:id'])
-  async getFeed(
-    @Res() res: Response,
-    @Param('id') idParam?: string,
-    @Query('next') next?: string,
-  ) {
-    const id = idParam !== undefined ? Number(idParam) : undefined;
+  @Get('feed')
+  feed() {
+    return this.service.findFeed(getCurrentUser().id);
+  }
 
-    let vector;
-    if (id === undefined) {
-      vector = await this.attackVectorsService.findFirstPublished();
-    } else if (next === 'true') {
-      vector = await this.attackVectorsService.findNextPublished(id);
-    } else {
-      vector = await this.attackVectorsService.findOnePublished(id);
-    }
-
-    if (!vector) {
-      return res.redirect('/');
-    }
-
-    const likesCount = await this.attackVectorsService.likesCount(vector.id);
-
-    return res.render('feed', {
-      title: vector.title,
-      data: { vector, likesCount, isFeed: true },
-    });
+  @Get('feed/:id')
+  feedById(@Param('id', ParseIntPipe) id: number, @Query('next') next?: string) {
+    return this.service.findFeed(getCurrentUser().id, id, next === 'true');
   }
 
   @Get('draft')
-  @Render('draft')
-  async getDraft() {
-    const userId = getCurrentUserId();
-    const vector = await this.attackVectorsService.findDraftByUser(userId);
-
-    return {
-      title: 'Добавление',
-      data: {
-        vector,
-        hasDraft: !!vector,
-        defaultImage: DEFAULT_IMAGE_KEY,
-        defaultVideo: DEFAULT_VIDEO_KEY,
-        isDraft: true,
-      },
-    };
+  draft() {
+    return this.service.findDraft(getCurrentUser().id);
   }
 
-  @Post('draft')
-  @Redirect('/draft')
-  async createDraft(@Body('title') title: string) {
-    const userId = getCurrentUserId();
-    await this.attackVectorsService.createDraft(userId, title || 'Без названия');
-  }
-
-  @Post('draft/publish')
-  @Redirect('/')
-  async publishDraft(
-    @Body('id') idRaw: string,
-    @Body('shortDescription') shortDescription: string,
-    @Body('severity') severityRaw: string,
-    @Body('discoveredYear') discoveredYearRaw: string,
+  @Post()
+  @UseInterceptors(FileFieldsInterceptor(
+    [{ name: 'image', maxCount: 1 }, { name: 'video', maxCount: 1 }],
+    { limits: { fileSize: 50 * 1024 * 1024 } }, // без dest файлы хранятся в памяти (buffer)
+  ))
+  create(
+    @Body('title') title: string,
+    @UploadedFiles() files: { image?: UploadedFile[]; video?: UploadedFile[] },
   ) {
-    const id = Number(idRaw);
-    const severity = Number(severityRaw);
-    const discoveredYear = Number(discoveredYearRaw);
-    if (!Number.isNaN(id)) {
-      await this.attackVectorsService.publishDraft(
-        id,
-        shortDescription,
-        severity,
-        discoveredYear,
-      );
+    const image = files?.image?.[0];
+    const video = files?.video?.[0];
+    if (!title?.trim() || !image?.mimetype.startsWith('image/') || !video?.mimetype.startsWith('video/')) {
+      throw new BadRequestException();
     }
+    return this.service.createDraft(getCurrentUser().id, title.trim(), image, video);
   }
 
-  @Post('delete')
-  @Redirect('/')
-  async deleteVector(@Body('id') idRaw: string) {
-    const id = Number(idRaw);
-    if (!Number.isNaN(id)) {
-      await this.attackVectorsService.softDeleteBySql(id);
+  @Put('draft/publish')
+  publish(
+    @Body('short_description') shortDescription?: string,
+    @Body('severity') severityRaw?: unknown,
+    @Body('discovered_year') yearRaw?: unknown,
+  ) {
+    const severity = toInt(severityRaw);
+    const year = toInt(yearRaw);
+    if (!shortDescription?.trim() || !severity || severity < 1 || severity > 10 || !year || year < 1900) {
+      throw new BadRequestException();
     }
+    return this.service.publishDraft(getCurrentUser().id, shortDescription.trim(), severity, year);
+  }
+
+  @Delete(':id')
+  @HttpCode(200)
+  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
+    await this.service.softDelete(getCurrentUser().id, id);
+  }
+
+  @Post(':id/like')
+  @HttpCode(200)
+  like(@Param('id', ParseIntPipe) id: number, @Body('like') likeRaw?: unknown) {
+    const like = toInt(likeRaw);
+    if (like !== 0 && like !== 1) throw new BadRequestException();
+    return this.service.setLike(getCurrentUser().id, id, like);
   }
 }
