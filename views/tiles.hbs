@@ -18,7 +18,7 @@
             name="discoveredDate"
             value="{{data.discoveredDate}}"
           >
-          <button type="submit">Найти</button>
+          <button type="submit" class="btn">Найти</button>
         </form>
 
         <div class="tile-grid">
@@ -35,7 +35,7 @@
               </a>
               <form action="/delete" method="POST" class="tile-delete-form">
                 <input type="hidden" name="id" value="{{this.id}}">
-                <button type="submit" class="tile-delete-btn" title="Удалить услугу">✕</button>
+                <button type="submit" class="btn">Удалить</button>
               </form>
             </div>
           {{else}}

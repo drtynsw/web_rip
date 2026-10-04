@@ -50,7 +50,7 @@ export class AttackVector {
   @Column({ name: 'published_at', type: 'timestamp', nullable: true })
   publishedAt: Date | null;
 
-  @ManyToOne(() => User, { onDelete: 'RESTRICT' })
+  @ManyToOne(() => User, { onDelete: 'RESTRICT' }) // каскадное удаление запрещено по заданию
   @JoinColumn({ name: 'creator_id' })
   creator: User;
 

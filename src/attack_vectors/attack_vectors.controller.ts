@@ -7,8 +7,14 @@ import {
   Query,
   Redirect,
   Render,
+  Res,
 } from '@nestjs/common';
-import { AttackVectorsService } from './attack_vectors.service';
+import type { Response } from 'express';
+import {
+  AttackVectorsService,
+  DEFAULT_IMAGE_KEY,
+  DEFAULT_VIDEO_KEY,
+} from './attack_vectors.service';
 import { getCurrentUserId } from './current-user';
 
 @Controller()
@@ -42,8 +48,11 @@ export class AttackVectorsController {
   }
 
   @Get(['feed', 'feed/:id'])
-  @Render('feed')
-  async getFeed(@Param('id') idParam?: string, @Query('next') next?: string) {
+  async getFeed(
+    @Res() res: Response,
+    @Param('id') idParam?: string,
+    @Query('next') next?: string,
+  ) {
     const id = idParam !== undefined ? Number(idParam) : undefined;
 
     let vector;
@@ -55,12 +64,16 @@ export class AttackVectorsController {
       vector = await this.attackVectorsService.findOnePublished(id);
     }
 
-    const likesCount = vector ? await this.attackVectorsService.likesCount(vector.id) : 0;
+    if (!vector) {
+      return res.redirect('/');
+    }
 
-    return {
-      title: vector ? vector.title : 'Не найдено',
+    const likesCount = await this.attackVectorsService.likesCount(vector.id);
+
+    return res.render('feed', {
+      title: vector.title,
       data: { vector, likesCount, isFeed: true },
-    };
+    });
   }
 
   @Get('draft')
@@ -74,6 +87,8 @@ export class AttackVectorsController {
       data: {
         vector,
         hasDraft: !!vector,
+        defaultImage: DEFAULT_IMAGE_KEY,
+        defaultVideo: DEFAULT_VIDEO_KEY,
         isDraft: true,
       },
     };

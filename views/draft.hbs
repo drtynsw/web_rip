@@ -16,12 +16,14 @@
           <form action="/draft" method="POST">
             <div class="draft-media-col">
               <div class="draft-media-item">
-                <span class="draft-media-label">Видео</span>
-                <input type="file" accept="video/*" class="draft-media-input" name="video">
+                <span class="draft-media-label">Фото</span>
+                <img src="/media/{{data.defaultImage}}" alt="Фото по умолчанию" class="draft-media-preview">
+                <input type="file" accept="image/*" class="draft-media-input" name="image">
               </div>
               <div class="draft-media-item">
-                <span class="draft-media-label">Изображение</span>
-                <input type="file" accept="image/*" class="draft-media-input" name="image">
+                <span class="draft-media-label">Видео</span>
+                <video src="/media/{{data.defaultVideo}}" class="draft-media-preview" muted loop></video>
+                <input type="file" accept="video/*" class="draft-media-input" name="video">
               </div>
             </div>
 
@@ -31,20 +33,20 @@
             </div>
 
             <p class="draft-note">
-              Это черновик.
+              Черновик по умолчанию.
             </p>
 
-            <button type="submit" class="btn-primary">Далее</button>
+            <button type="submit" class="btn btn-block">Далее</button>
           </form>
         {{else}}
           <div class="draft-media-col">
             <div class="draft-media-item">
-              <span class="draft-media-label">Видео</span>
-              <video src="/media/{{data.vector.videoUrl}}" class="draft-media-preview" muted loop></video>
+              <span class="draft-media-label">Фото</span>
+              <img src="/media/{{data.vector.imageUrl}}" alt="{{data.vector.title}}" class="draft-media-preview">
             </div>
             <div class="draft-media-item">
-              <span class="draft-media-label">Изображение</span>
-              <img src="/media/{{data.vector.imageUrl}}" alt="{{data.vector.title}}" class="draft-media-preview">
+              <span class="draft-media-label">Видео</span>
+              <video src="/media/{{data.vector.videoUrl}}" class="draft-media-preview" muted loop></video>
             </div>
           </div>
 
@@ -63,15 +65,15 @@
 
             <div class="field-group">
               <label for="severity">Базовая опасность (1–10)</label>
-              <input id="severity" name="severity" type="number" min="1" max="10" required>
+              <input id="severity" name="severity" type="number" min="1" max="10" value="{{data.vector.severity}}" required>
             </div>
 
             <div class="field-group">
               <label for="discoveredYear">Год первой массовой фиксации</label>
-              <input id="discoveredYear" name="discoveredYear" type="number" required>
+              <input id="discoveredYear" name="discoveredYear" type="number" value="{{data.vector.discoveredYear}}" required>
             </div>
 
-            <button type="submit" class="btn-primary">Опубликовать</button>
+            <button type="submit" class="btn btn-block">Опубликовать</button>
           </form>
         {{/unless}}
       </div>
