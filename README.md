@@ -33,24 +33,24 @@
 
 #### Домен «Услуги» — `/api/attack_vectors`
 
-| № | Метод | URL | Тело запроса | Ответ |
-|---|---|---|---|---|
-| 1 | GET | `/api/attack_vectors?discovered_year=1999` | — | 200, массив услуг (только опубликованные; фильтр необязателен) |
-| 2 | GET | `/api/attack_vectors/feed` | — | 200, первая услуга ленты; 404 |
-| 3 | GET | `/api/attack_vectors/feed/:id?next=true` | — | 200, услуга `:id`, с `next=true` — следующая после `:id`; 404 |
-| 4 | GET | `/api/attack_vectors/draft` | — | 200, черновик текущего пользователя; 404 |
-| 5 | POST | `/api/attack_vectors` | `multipart/form-data`: `title`, `image` (файл), `video` (файл) | 201, созданный черновик; 400; 409 — черновик уже есть |
-| 6 | PUT | `/api/attack_vectors/draft/publish` | JSON: `short_description`, `severity` (1–10), `discovered_year` | 200, опубликованная услуга; 400; 404 |
-| 7 | DELETE | `/api/attack_vectors/:id` | — | 200; 403 — чужая; 404 |
-| 8 | POST | `/api/attack_vectors/:id/like` | JSON: `like` (1 — поставить, 0 — снять) | 200, услуга с новым числом лайков; 400; 404 |
+| № | Метод | URL | Описание | Тело запроса | Ответ |
+|---|---|---|---|---|---|
+| 1 | GET | `/api/attack_vectors?discovered_year=1999` | Список с фильтрацией (только опубликованные). Признак `is_mine` 0/1 — создатель услуги совпадает с текущим пользователем | — | 200, массив услуг |
+| 2 | GET | `/api/attack_vectors/feed?id=1&next=true` | Лента (только опубликованные). Без параметров — первая услуга, `id` — услуга по id, `id` + `next=true` — следующая после id. Из БД читается одна строка | — | 200, одна услуга; 404 |
+| 3 | GET | `/api/attack_vectors/draft` | Получение черновика (не более 1 записи для пользователя), id не указывается | — | 200, черновик; 404 |
+| 4 | POST | `/api/attack_vectors` | Добавление + файлы изображения и короткого видео. Файлы — в MinIO, их латинские имена — в полях БД | `multipart/form-data`: `title`, `image` (файл), `video` (файл) | 201, черновик; 400; 409 — черновик уже есть |
+| 5 | PUT | `/api/attack_vectors/draft/publish` | Публикация (смена статуса черновик → опубликован) | JSON: `short_description`, `severity` (1–10), `discovered_year` | 200, услуга; 400; 404 |
+| 6 | DELETE | `/api/attack_vectors/:id` | Удаление (только soft delete). Только услуги этого пользователя | — | 200; 403 — чужая; 404 |
+| 7 | POST | `/api/attack_vectors/:id/like` | Лайк от текущего пользователя. `like`: 1 — ставит, 0 — отменяет | JSON: `like` | 200, услуга; 400; 404 |
 
 #### Домен «Пользователь» — `/api/users`
 
-| № | Метод | URL | Тело запроса | Ответ |
-|---|---|---|---|---|
-| 9 | POST | `/api/users/register` | JSON: `username`, `password` | 201, `{ "id", "username" }`; 400; 409 — логин занят |
-| 10 | POST | `/api/users/login` | — | 200, заглушка до ЛР4 |
-| 11 | POST | `/api/users/logout` | — | 200, заглушка до ЛР4 |
+| № | Метод | URL | Описание | Тело запроса | Ответ |
+|---|---|---|---|---|---|
+| 8 | POST | `/api/users/register` | Регистрация | JSON: `username`, `password` | 201, `{ id, username }`; 400; 409 — логин занят |
+| 9 | POST | `/api/users/login` | Аутентификация (заглушка для ЛР4) | — | 200 |
+| 10 | POST | `/api/users/logout` | Деавторизация (заглушка для ЛР4) | — | 200 |
+ |
 
 ### Таблицы БД
 

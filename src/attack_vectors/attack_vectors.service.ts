@@ -9,7 +9,7 @@ import { AttackVector, AttackVectorStatus } from './entities/attack-vector.entit
 import { Like } from './entities/like.entity';
 import { MinioService } from '../minio/minio.service';
 import { AttackVectorResponse, serializeAttackVector } from './attack-vector.serializer';
-import { UploadedFile } from '../common/uploaded-file';
+import { CreateRequest, PublishRequest } from './attack-vector.dto';
 
 const PUBLISHED = AttackVectorStatus.PUBLISHED;
 
@@ -69,7 +69,7 @@ export class AttackVectorsService {
     return this.serializeOne(v, userId);
   }
 
-  async createDraft(userId: number, title: string, image: UploadedFile, video: UploadedFile) {
+  async createDraft(userId: number, { title, image, video }: CreateRequest): Promise<AttackVectorResponse> {
     const exists = await this.avRepository.exists({ where: { creatorId: userId, status: AttackVectorStatus.DRAFT } });
     if (exists) throw new ConflictException(); // у пользователя уже есть черновик
 
@@ -84,10 +84,16 @@ export class AttackVectorsService {
     return this.serializeOne(draft, userId);
   }
 
-  async publishDraft(userId: number, shortDescription: string, severity: number, discoveredYear: number) {
+  async publishDraft(userId: number, body: PublishRequest): Promise<AttackVectorResponse> {
     const v = await this.avRepository.findOne({ where: { creatorId: userId, status: AttackVectorStatus.DRAFT } });
     if (!v) throw new NotFoundException();
-    Object.assign(v, { shortDescription, severity, discoveredYear, status: PUBLISHED, publishedAt: new Date() });
+    Object.assign(v, {
+      shortDescription: body.short_description,
+      severity: body.severity,
+      discoveredYear: body.discovered_year,
+      status: PUBLISHED,
+      publishedAt: new Date(),
+    });
     return this.serializeOne(await this.avRepository.save(v), userId);
   }
 

@@ -4,6 +4,8 @@ import {
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { AttackVectorsService } from './attack_vectors.service';
+import { AttackVectorResponse } from './attack-vector.serializer';
+import { FeedQuery, LikeRequest, ListQuery, PublishRequest } from './attack-vector.dto';
 import { getCurrentUser } from '../common/current-user';
 import { UploadedFile } from '../common/uploaded-file';
 
@@ -18,24 +20,21 @@ export class AttackVectorsController {
   constructor(private readonly service: AttackVectorsService) {}
 
   @Get()
-  list(@Query('discovered_year') yearRaw?: string) {
-    const year = toInt(yearRaw);
+  list(@Query() query: ListQuery): Promise<AttackVectorResponse[]> {
+    const year = toInt(query.discovered_year);
     if (Number.isNaN(year)) throw new BadRequestException();
     return this.service.findPublished(getCurrentUser().id, year);
   }
 
   @Get('feed')
-  feed() {
-    return this.service.findFeed(getCurrentUser().id);
-  }
-
-  @Get('feed/:id')
-  feedById(@Param('id', ParseIntPipe) id: number, @Query('next') next?: string) {
-    return this.service.findFeed(getCurrentUser().id, id, next === 'true');
+  feed(@Query() query: FeedQuery): Promise<AttackVectorResponse> {
+    const id = toInt(query.id);
+    if (Number.isNaN(id)) throw new BadRequestException();
+    return this.service.findFeed(getCurrentUser().id, id, query.next === 'true');
   }
 
   @Get('draft')
-  draft() {
+  draft(): Promise<AttackVectorResponse> {
     return this.service.findDraft(getCurrentUser().id);
   }
 
@@ -47,27 +46,24 @@ export class AttackVectorsController {
   create(
     @Body('title') title: string,
     @UploadedFiles() files: { image?: UploadedFile[]; video?: UploadedFile[] },
-  ) {
+  ): Promise<AttackVectorResponse> {
     const image = files?.image?.[0];
     const video = files?.video?.[0];
     if (!title?.trim() || !image?.mimetype.startsWith('image/') || !video?.mimetype.startsWith('video/')) {
       throw new BadRequestException();
     }
-    return this.service.createDraft(getCurrentUser().id, title.trim(), image, video);
+    return this.service.createDraft(getCurrentUser().id, { title: title.trim(), image, video });
   }
 
   @Put('draft/publish')
-  publish(
-    @Body('short_description') shortDescription?: string,
-    @Body('severity') severityRaw?: unknown,
-    @Body('discovered_year') yearRaw?: unknown,
-  ) {
-    const severity = toInt(severityRaw);
-    const year = toInt(yearRaw);
-    if (!shortDescription?.trim() || !severity || severity < 1 || severity > 10 || !year || year < 1900) {
+  publish(@Body() body: PublishRequest): Promise<AttackVectorResponse> {
+    const severity = toInt(body?.severity);
+    const year = toInt(body?.discovered_year);
+    const text = body?.short_description?.trim();
+    if (!text || !severity || severity < 1 || severity > 10 || !year || year < 1900) {
       throw new BadRequestException();
     }
-    return this.service.publishDraft(getCurrentUser().id, shortDescription.trim(), severity, year);
+    return this.service.publishDraft(getCurrentUser().id, { short_description: text, severity, discovered_year: year });
   }
 
   @Delete(':id')
@@ -78,8 +74,8 @@ export class AttackVectorsController {
 
   @Post(':id/like')
   @HttpCode(200)
-  like(@Param('id', ParseIntPipe) id: number, @Body('like') likeRaw?: unknown) {
-    const like = toInt(likeRaw);
+  like(@Param('id', ParseIntPipe) id: number, @Body() body: LikeRequest): Promise<AttackVectorResponse> {
+    const like = toInt(body?.like);
     if (like !== 0 && like !== 1) throw new BadRequestException();
     return this.service.setLike(getCurrentUser().id, id, like);
   }
