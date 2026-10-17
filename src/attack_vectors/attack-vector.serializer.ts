@@ -1,23 +1,24 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { AttackVector } from './entities/attack-vector.entity';
 
-export interface AttackVectorResponse {
-  id: number;
-  title: string;
-  short_description: string | null;
-  image_url: string;
-  video_url: string;
-  severity: number | null;
-  discovered_year: number | null;
-  likes_count: number;
-  is_liked: 0 | 1; // текущий пользователь поставил лайк
-  is_mine: 0 | 1;  // текущий пользователь — создатель услуги
+export class AttackVectorResponse {
+  @ApiProperty({ example: 8 }) id: number;
+  @ApiProperty({ example: 'Атака посредника (MITM)' }) title: string;
+  @ApiProperty({ type: String, nullable: true, example: 'Перехват трафика' }) short_description: string | null;
+  @ApiProperty({ example: 'http://localhost:9000/attack-vectors/image_3f9e.png' }) image_url: string;
+  @ApiProperty({ example: 'http://localhost:9000/attack-vectors/video_f07b.mp4' }) video_url: string;
+  @ApiProperty({ type: Number, nullable: true, example: 7 }) severity: number | null;
+  @ApiProperty({ type: Number, nullable: true, example: 2010 }) discovered_year: number | null;
+  @ApiProperty({ example: 3 }) likes_count: number;
+  @ApiProperty({ enum: [0, 1], description: 'Текущий пользователь поставил лайк' }) is_liked: 0 | 1;
+  @ApiProperty({ enum: [0, 1], description: 'Текущий пользователь — создатель услуги' }) is_mine: 0 | 1;
 }
 
 export function serializeAttackVector(
   v: AttackVector,
   likesCount: number,
   isLiked: boolean,
-  currentUserId: number,
+  currentUserId: number | null,
   getUrl: (key: string) => string,
 ): AttackVectorResponse {
   return {
@@ -30,6 +31,6 @@ export function serializeAttackVector(
     discovered_year: v.discoveredYear ?? null,
     likes_count: likesCount,
     is_liked: isLiked ? 1 : 0,
-    is_mine: v.creatorId === currentUserId ? 1 : 0,
+    is_mine: currentUserId !== null && v.creatorId === currentUserId ? 1 : 0,
   };
 }

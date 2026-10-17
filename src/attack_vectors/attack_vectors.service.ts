@@ -21,7 +21,7 @@ export class AttackVectorsService {
     private readonly minio: MinioService,
   ) {}
 
-  private async serialize(items: AttackVector[], userId: number): Promise<AttackVectorResponse[]> {
+  private async serialize(items: AttackVector[], userId: number | null): Promise<AttackVectorResponse[]> {
     if (!items.length) return [];
     const ids = items.map((v) => v.id);
     const counts = await this.likeRepository
@@ -30,24 +30,24 @@ export class AttackVectorsService {
       .where('l.attackVectorId IN (:...ids)', { ids })
       .groupBy('l.attackVectorId')
       .getRawMany<{ id: number; cnt: string }>();
-    const liked = await this.likeRepository.find({ where: { userId, attackVectorId: In(ids) } });
+    const liked = userId === null ? [] : await this.likeRepository.find({ where: { userId, attackVectorId: In(ids) } });
     const countMap = new Map(counts.map((c) => [Number(c.id), Number(c.cnt)]));
     const likedSet = new Set(liked.map((l) => l.attackVectorId));
     return items.map((v) => serializeAttackVector(
       v, countMap.get(v.id) ?? 0, likedSet.has(v.id), userId, (k) => this.minio.getUrl(k)));
   }
 
-  private async serializeOne(v: AttackVector, userId: number) {
+  private async serializeOne(v: AttackVector, userId: number | null) {
     return (await this.serialize([v], userId))[0];
   }
 
-  async findPublished(userId: number, discoveredYear?: number) {
+  async findPublished(userId: number | null, discoveredYear?: number) {
     const qb = this.avRepository.createQueryBuilder('av').where('av.status = :s', { s: PUBLISHED });
     if (discoveredYear !== undefined) qb.andWhere('av.discoveredYear = :y', { y: discoveredYear });
     return this.serialize(await qb.orderBy('av.id', 'ASC').getMany(), userId);
   }
 
-  async findFeed(userId: number, id?: number, next = false) {
+  async findFeed(userId: number | null, id?: number, next = false) {
     let v: AttackVector | null;
     if (id === undefined) {
       v = await this.avRepository.findOne({ where: { status: PUBLISHED }, order: { id: 'ASC' } });

@@ -1,10 +1,11 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { User } from './entities/user.entity';
 
-export interface UserResponse {
-  id: number;
-  username: string;
+export class UserResponse {
+  @ApiProperty({ example: 1 }) id: number;
+  @ApiProperty({ example: 'security_analyst' }) username: string;
 }
 
-export function serializeUser(user: User): UserResponse {
+export function serializeUser(user: { id: number; username: string }): UserResponse {
   return { id: user.id, username: user.username };
 }

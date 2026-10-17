@@ -10,6 +10,11 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql
 
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+
   adminer:
     image: adminer:latest
     ports:
